@@ -1,0 +1,243 @@
+/* Тёмное оформление. Цвета подставляются из theme.py вместо $ПЕРЕМЕННЫХ —
+   менять палитру нужно там, а не здесь. */
+
+QMainWindow, QWidget {
+    background: $BG;
+    color: $FG;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    font-size: 14px;
+}
+
+#progressBar {
+    background: $BG_PANEL;
+    border-bottom: 1px solid $BORDER;
+    color: $FG_DIM;
+    padding: 7px 14px;
+    font-size: 13px;
+}
+
+#lessonView {
+    background: $BG;
+    border: none;
+    border-right: 1px solid $BORDER;
+    padding: 18px 22px;
+    font-size: 15px;
+    color: $FG;
+}
+
+QPlainTextEdit {
+    background: $BG;
+    color: $FG;
+    border: none;
+    selection-background-color: #37475e;
+    selection-color: $FG;
+}
+
+#console {
+    background: $BG_DEEP;
+    border-top: 1px solid $BORDER;
+    padding: 10px 12px;
+    color: $FG;
+}
+
+#inputPrompt {
+    color: $FG_DIM;
+    font-size: 13px;
+}
+
+QLineEdit {
+    background: $BG;
+    color: $FG;
+    border: 1px solid $BORDER;
+    border-radius: 6px;
+    padding: 6px 10px;
+    selection-background-color: #37475e;
+}
+
+QLineEdit:focus {
+    border-color: $ACCENT;
+}
+
+#buttonBar {
+    background: $BG_PANEL;
+    border-top: 1px solid $BORDER;
+}
+
+QPushButton {
+    background: $BG_PANEL;
+    color: $FG;
+    border: 1px solid $BORDER;
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-size: 14px;
+}
+
+QPushButton:hover:enabled {
+    background: $BG_HOVER;
+}
+
+QPushButton:disabled {
+    color: $FG_FAINT;
+    border-color: $BORDER;
+    background: $BG;
+}
+
+#runButton {
+    background: $ACCENT;
+    border-color: $ACCENT;
+    color: #f2f5fa;
+    font-weight: 600;
+}
+
+#runButton:hover:enabled {
+    background: $ACCENT_HOVER;
+    border-color: $ACCENT_HOVER;
+}
+
+#checkButton:enabled {
+    border-color: $SUCCESS;
+    color: $SUCCESS;
+    font-weight: 600;
+}
+
+/* Кнопка учителя всегда на виду, но спокойная: она не тревожный сигнал,
+   а обычное «позови преподавателя». */
+#helpButton:enabled {
+    border-color: $WARN;
+    color: $WARN;
+}
+
+#helpButton:hover:enabled {
+    background: $BG_WARN_SOFT;
+}
+
+QSplitter::handle {
+    background: $BORDER;
+}
+
+QSplitter::handle:horizontal { width: 1px; }
+QSplitter::handle:vertical { height: 1px; }
+
+QStatusBar {
+    background: $BG_PANEL;
+    border-top: 1px solid $BORDER;
+    color: $FG_DIM;
+    font-size: 12px;
+}
+
+QStatusBar::item { border: none; }
+
+QToolTip {
+    background: $BG_PANEL;
+    color: $FG;
+    border: 1px solid $BORDER;
+    padding: 5px 8px;
+}
+
+QScrollBar:vertical {
+    background: transparent;
+    width: 12px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background: $BORDER;
+    border-radius: 6px;
+    min-height: 30px;
+}
+
+QScrollBar::handle:vertical:hover { background: $FG_FAINT; }
+
+QScrollBar:horizontal {
+    background: transparent;
+    height: 12px;
+}
+
+QScrollBar::handle:horizontal {
+    background: $BORDER;
+    border-radius: 6px;
+    min-width: 30px;
+}
+
+QScrollBar::handle:horizontal:hover { background: $FG_FAINT; }
+
+QScrollBar::add-line, QScrollBar::sub-line { height: 0; width: 0; }
+QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }
+
+/* --- Панель урока ------------------------------------------------------ */
+
+#lessonTitle {
+    background: $BG_PANEL;
+    color: $FG;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 14px 18px 12px 18px;
+    border-bottom: 1px solid $BORDER;
+    border-right: 1px solid $BORDER;
+}
+
+#examplesBar {
+    background: $BG_PANEL;
+    border-top: 1px solid $BORDER;
+    border-right: 1px solid $BORDER;
+}
+
+#examplesCaption {
+    color: $FG_DIM;
+    font-size: 12px;
+}
+
+#exampleButton {
+    background: transparent;
+    border: 1px solid $BORDER;
+    color: $FG;
+    text-align: left;
+    padding: 7px 12px;
+    font-size: 13px;
+}
+
+#exampleButton:hover {
+    background: $BG_HOVER;
+    border-color: $ACCENT;
+}
+
+#actionBar {
+    background: $BG_PANEL;
+    border-top: 1px solid $BORDER;
+    border-right: 1px solid $BORDER;
+}
+
+#primaryAction {
+    background: $ACCENT;
+    border-color: $ACCENT;
+    color: #f2f5fa;
+    font-weight: 600;
+    padding: 9px 22px;
+}
+
+#primaryAction:hover {
+    background: $ACCENT_HOVER;
+    border-color: $ACCENT_HOVER;
+}
+
+#askBar {
+    background: $BG_PANEL;
+    border-top: 1px solid $BORDER;
+    border-right: 1px solid $BORDER;
+}
+
+#askField {
+    background: $BG;
+    border: 1px solid $BORDER;
+    border-radius: 6px;
+    padding: 7px 11px;
+    font-size: 13px;
+}
+
+#askField:focus { border-color: $ACCENT; }
+#askField:disabled { color: $FG_FAINT; }
+
+#askButton {
+    padding: 7px 16px;
+    font-size: 13px;
+}
