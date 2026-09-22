@@ -18,9 +18,10 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, QTimer, Signal
+from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, Signal
 
 from app import config
+from app.runner import child
 
 SCRIPT_NAME = "solution.py"
 # Отдельное имя для кода ученика, когда запускается не он сам, а обёртка
@@ -128,6 +129,13 @@ def _clip(text: str) -> str:
 class CodeRunner(QObject):
     """Асинхронный запуск с поддержкой ``input()``.
 
+    Срок жизни программы здесь не отмеряется: его держит сам дочерний
+    процесс (см. :func:`app.runner.child._install_watchdog`). Отсюда не
+    видно, работает программа или ждёт ответа человека, а разница
+    решающая: ученик, набирающий ответ на вопрос, не должен получить
+    «программа зациклилась». Если сторож всё же сработал, дочерний
+    процесс выходит с кодом ``child.TIMEOUT_EXIT_CODE``.
+
     Сигналы:
         output: очередной кусок вывода (stdout и stderr вперемешку, как в консоли)
         finished: (код возврата, был ли таймаут)
@@ -139,10 +147,6 @@ class CodeRunner(QObject):
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._proc: QProcess | None = None
-        self._timer = QTimer(self)
-        self._timer.setSingleShot(True)
-        self._timer.timeout.connect(self._on_timeout)
-        self._timed_out = False
         self._chars_sent = 0
 
     @property
@@ -154,7 +158,6 @@ class CodeRunner(QObject):
         self.stop()
         script = _prepare_script(code)
 
-        self._timed_out = False
         self._chars_sent = 0
 
         proc = QProcess(self)
@@ -166,6 +169,9 @@ class CodeRunner(QObject):
         env = QProcessEnvironment.systemEnvironment()
         for key, value in _env_vars().items():
             env.insert(key, value)
+        # Сколько программе разрешено работать, решает она сама — отсюда
+        # уходит только само число.
+        env.insert(child.TIMEOUT_ENV, str(config.RUN_TIMEOUT_SEC))
         proc.setProcessEnvironment(env)
 
         proc.readyReadStandardOutput.connect(self._on_output)
@@ -174,7 +180,6 @@ class CodeRunner(QObject):
         self._proc = proc
         command = config.python_command()
         proc.start(command[0], [*command[1:], str(script)])
-        self._timer.start(int(config.RUN_TIMEOUT_SEC * 1000))
 
     def send_input(self, text: str) -> None:
         """Отправляет строку в ``stdin`` — ответ ученика на ``input()``."""
@@ -183,12 +188,22 @@ class CodeRunner(QObject):
         self._proc.write((text + "\n").encode("utf-8"))
 
     def stop(self) -> None:
-        """Снимает процесс, если он ещё жив."""
-        self._timer.stop()
-        if self._proc is not None and self._proc.state() != QProcess.NotRunning:
-            self._proc.kill()
-            self._proc.waitForFinished(1000)
-        self._proc = None
+        """Снимает процесс, если он ещё жив.
+
+        Сигналы отвязываются до того, как процесс будет убит: иначе
+        ``kill`` порождает ещё одно «программа завершилась» — от этого
+        сообщение об остановке печаталось дважды.
+        """
+        proc, self._proc = self._proc, None
+        if proc is None:
+            return
+
+        proc.readyReadStandardOutput.disconnect()
+        proc.finished.disconnect()
+        if proc.state() != QProcess.NotRunning:
+            proc.kill()
+            proc.waitForFinished(1000)
+        proc.deleteLater()
 
     # -- внутреннее --------------------------------------------------------
 
@@ -204,21 +219,11 @@ class CodeRunner(QObject):
         if self._chars_sent >= config.MAX_OUTPUT_CHARS:
             chunk += "\n\n[...вывод обрезан, программа остановлена...]"
             self.output.emit(chunk)
-            self._timed_out = False
             self.stop()
             self.finished.emit(-1, False)
             return
         self.output.emit(chunk)
 
-    def _on_timeout(self) -> None:
-        """Программа работает дольше отведённого — почти всегда вечный цикл."""
-        if not self.is_running:
-            return
-        self._timed_out = True
-        self.stop()
-        self.finished.emit(-1, True)
-
     def _on_finished(self, exit_code: int, _status: QProcess.ExitStatus) -> None:
-        self._timer.stop()
         self._proc = None
-        self.finished.emit(exit_code, self._timed_out)
+        self.finished.emit(exit_code, exit_code == child.TIMEOUT_EXIT_CODE)

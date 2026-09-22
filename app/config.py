@@ -49,12 +49,19 @@ IS_FROZEN = bool(getattr(sys, "frozen", False))
 
 
 def python_command() -> list[str]:
-    """Команда, к которой останется дописать путь к файлу."""
-    if IS_FROZEN:
-        from app.runner.child import EXEC_FLAG
+    """Команда, к которой останется дописать путь к файлу.
 
-        return [sys.executable, EXEC_FLAG]
-    return [sys.executable]
+    Код ученика в обоих случаях исполняет один и тот же наш модуль —
+    отличается лишь способ до него добраться. Одинаковость тут важнее
+    краткости: сторож времени, кодировки и чистка трассировки живут
+    внутри этого модуля, и в разработке должно работать ровно то же,
+    что достанется ученику.
+    """
+    from app.runner import child
+
+    if IS_FROZEN:
+        return [sys.executable, child.EXEC_FLAG]
+    return [sys.executable, str(Path(child.__file__).resolve()), child.EXEC_FLAG]
 
 
 RUN_TIMEOUT_SEC = 5.0  # ручной запуск по кнопке
